@@ -6,6 +6,8 @@
     <title>CHRONO-HEX // 2050 TRANSMISSION</title>
     <!-- Include html2canvas for JPEG exporting -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- Include Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap');
 
@@ -444,7 +446,7 @@
             <div id="grab-warn-view" style="display: none; width: 100%; text-align: left; padding: 20px 0;">
                 <h2 style="color: var(--alert); margin-bottom: 15px;">// WARNING: DISPELL PROTOCOL</h2>
                 <p style="font-size: 1.05rem; color: var(--text); line-height: 1.6; margin-bottom: 30px;">
-                    Are you sure you want to permanently destroy this communication?
+                    are you sure you want to permanently destroy this communication
                 </p>
                 <div class="modal-actions" style="justify-content: flex-end; gap: 15px; width: 100%;">
                     <button class="close-modal" onclick="hideDispellWarning()">[ Cancel ]</button>
@@ -455,6 +457,11 @@
     </div>
 
     <script>
+        // Connected Supabase Project Configuration
+        const SUPABASE_URL = 'https://lagbighslghkednwrnit.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_v1DJ2NwxcA252wj2R2e3Pg_1vQaDrom';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
         const runeSvgs = {
             "balance": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 283.46 283.46"><style>.cls-rune{fill:none;stroke:#fff;stroke-linejoin:round;stroke-width:5px;}</style><line class="cls-rune" x1="141.73" y1="28.35" x2="141.73" y2="255.12"/><rect class="cls-rune" x="28.35" y="28.35" width="226.77" height="226.77"/><polyline class="cls-rune" points="141.73 56.69 56.69 141.73 141.73 226.77"/><polygon class="cls-rune" points="141.73 141.73 99.21 99.21 99.21 184.25 141.73 141.73"/><polyline class="cls-rune" points="141.73 56.69 226.77 141.73 141.73 226.77"/><polygon class="cls-rune" points="141.73 141.73 184.25 99.21 184.25 184.25 141.73 141.73"/></svg>`,
             
@@ -467,38 +474,33 @@
             "right place right time": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 283.46 283.46"><style>.cls-rune{fill:none;stroke:#fff;stroke-linejoin:round;stroke-width:5px;}</style><polyline class="cls-rune" points="141.73 251.81 141.73 25.04 221.91 58.25 61.56 218.6"/><line class="cls-rune" x1="61.56" y1="58.25" x2="221.91" y2="218.6"/><line class="cls-rune" x1="28.35" y1="138.43" x2="255.12" y2="138.43"/><path class="cls-rune" d="M239.95,81.73c9.65,16.68,15.17,36.04,15.17,56.69h0c0,62.62-50.76,113.39-113.39,113.39h0c-62.62,0-113.39-50.76-113.39-113.39h0c0-52.83,36.14-97.23,85.04-109.81"/></svg>`
         };
 
-        const defaultAdvices = [
-            { id: 'def-1', text: "Learn how to filter your own water. The municipal grid is a joke by 2038.", rune: "balance" },
-            { id: 'def-2', text: "Keep a paper notebook. Digital ledgers vanish when the solar flare hits.", rune: "connection" },
-            { id: 'def-3', text: "To my 2026 self: Stop stressing over career paths that AI replaced three years from now. Build community instead.", rune: "new beginnings" },
-            { id: 'def-4', text: "Plant real trees now. You'll need the shade.", rune: "right place right time" }
-        ];
-
-        function getStoredAdvices() {
-            const data = localStorage.getItem('cyber_witch_advices_timeless_v2');
-            if (!data) {
-                localStorage.setItem('cyber_witch_advices_timeless_v2', JSON.stringify(defaultAdvices));
-                return defaultAdvices;
+        async function getStoredAdvices() {
+            const { data, error } = await supabase.from('advices').select('*');
+            if (error) {
+                console.error('Error fetching advices from Supabase:', error);
+                return [];
             }
-            return JSON.parse(data);
+            return data || [];
         }
 
-        function saveAdviceToStorage(text, rune) {
-            const advices = getStoredAdvices();
+        async function saveAdviceToStorage(text, rune) {
             const newEntry = {
                 id: 'adv_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
                 text: text,
                 rune: rune
             };
-            advices.unshift(newEntry);
-            localStorage.setItem('cyber_witch_advices_timeless_v2', JSON.stringify(advices));
+            const { error } = await supabase.from('advices').insert([newEntry]);
+            if (error) {
+                console.error('Error saving advice to Supabase:', error);
+            }
             return newEntry;
         }
 
-        function deleteAdviceFromStorage(id) {
-            let advices = getStoredAdvices();
-            advices = advices.filter(item => item.id !== id);
-            localStorage.setItem('cyber_witch_advices_timeless_v2', JSON.stringify(advices));
+        async function deleteAdviceFromStorage(id) {
+            const { error } = await supabase.from('advices').delete().eq('id', id);
+            if (error) {
+                console.error('Error deleting advice from Supabase:', error);
+            }
         }
 
         function initRuneSelector() {
@@ -536,11 +538,11 @@
         let animationFrameId = null;
         let currentSelectedAdviceId = null;
 
-        function initMatrix() {
+        async function initMatrix() {
             if (animationFrameId) cancelAnimationFrame(animationFrameId);
             const space = document.getElementById('matrix-space');
             space.innerHTML = '';
-            const advices = getStoredAdvices();
+            const advices = await getStoredAdvices();
             activeNodes = [];
 
             advices.forEach((item) => {
@@ -577,7 +579,7 @@
                     vx: 0,
                     vy: 0,
                     angleOffset: Math.random() * 100,
-                    speed: 0.2 + Math.random() * 0.2
+                    speed: 0.4 + Math.random() * 0.4
                 });
             });
 
@@ -602,7 +604,7 @@
                     const dx = centerX - mouseX;
                     const dy = centerY - mouseY;
                     const dist = Math.sqrt(dx * dx + dy * dy);
-                    const repulsionRadius = 100;
+                    const repulsionRadius = 160;
 
                     if (dist < repulsionRadius && dist > 0) {
                         const force = (repulsionRadius - dist) / repulsionRadius;
@@ -663,12 +665,12 @@
             document.getElementById('grab-main-view').style.display = 'block';
         }
 
-        function confirmDispell() {
+        async function confirmDispell() {
             if (currentSelectedAdviceId) {
-                deleteAdviceFromStorage(currentSelectedAdviceId);
+                await deleteAdviceFromStorage(currentSelectedAdviceId);
             }
             closeModals();
-            initMatrix();
+            await initMatrix();
         }
 
         function closeModals() {
@@ -677,16 +679,16 @@
             currentSelectedAdviceId = null;
         }
 
-        function submitAdvice() {
+        async function submitAdvice() {
             const text = document.getElementById('advice-input').value.trim();
             if(!text) return;
             
             const selectedRuneInput = document.querySelector('input[name="rune-choice"]:checked');
             const rune = selectedRuneInput ? selectedRuneInput.value : 'balance';
 
-            saveAdviceToStorage(text, rune);
+            await saveAdviceToStorage(text, rune);
             closeModals();
-            initMatrix();
+            await initMatrix();
         }
 
         // JPEG Export using html2canvas
