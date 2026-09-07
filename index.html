@@ -6,8 +6,86 @@
     <title>CHRONO-HEX // 2050 TRANSMISSION</title>
     <!-- Include html2canvas for JPEG exporting -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <!-- Include Supabase JS Client -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+    <header>
+        <div class="system-status">SYS_TIME: 2050.11.03 // <span>TRANSMITTING TO 2026.11.03</span></div>
+        <h1>Chrono-Hex</h1>
+        <button class="cast-btn" onclick="openCastModal()">[+ Transmit Advice]</button>
+    </header>
+
+    <!-- Drifting Grid Workspace -->
+    <div id="matrix-space"></div>
+
+    <!-- Cast Advice Modal -->
+    <div id="cast-modal" class="overlay">
+        <div class="modal-box">
+            <h2>// ONE WAY COMMUNICATION TO 2026</h2>
+            <p class="modal-subtitle">Type your transmission and select your bind rune sigil carefully.</p>
+            
+            <textarea id="advice-input" placeholder="e.g. Be good to the kids. Buy physical land." maxlength="250"></textarea>
+            
+            <span class="rune-selector-label">// SEAL WITH BIND RUNE</span>
+            <div class="rune-grid" id="rune-selection-grid">
+                <!-- Injected via JavaScript -->
+            </div>
+
+            <div class="modal-actions">
+                <button class="close-modal" onclick="closeModals()">[ Abort ]</button>
+                <button class="cast-btn" onclick="submitAdvice()">Transmit Spell</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grabbed Advice / Talisman Export Modal -->
+    <div id="grab-modal" class="overlay">
+        <div class="modal-box" style="text-align: center; max-width: 600px; align-items: center;">
+            <div id="grab-main-view">
+                <h2>// HEX CAPTURED</h2>
+                <p class="modal-subtitle">You have snatched a transmission out of the air. Preserve locally or dispell.</p>
+                
+                <!-- Render Target for JPEG -->
+                <div style="display: inline-block; margin-bottom: 10px; margin-top: 15px;">
+                    <div id="talisman-render" class="talisman-card">
+                        <div class="talisman-header-top">
+                            <span>CHRONO-ARCHIVE // SPECIMEN 2050</span>
+                            <span id="render-rune-name" style="text-transform: uppercase;"></span>
+                        </div>
+                        <div class="talisman-body-layout">
+                            <div id="render-rune-icon" class="talisman-rune-target"></div>
+                            <div id="render-text" class="talisman-content"></div>
+                        </div>
+                        <div class="talisman-footer">
+                            <span>ORIGIN: 2050</span>
+                            <span>TARGET: 2026</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-actions" style="justify-content: space-between; width: 100%; margin-top: 20px;">
+                    <button class="close-modal" onclick="closeModals()">[ Dismiss ]</button>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="cast-btn danger" onclick="showDispellWarning()">Dispell</button>
+                        <button class="cast-btn" onclick="downloadTalisman()">Download JPEG Talisman</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dispell Warning View -->
+            <div id="grab-warn-view" style="display: none; width: 100%; text-align: left; padding: 20px 0;">
+                <h2 style="color: var(--alert); margin-bottom: 15px;">// WARNING: DISPELL PROTOCOL</h2>
+                <p style="font-size: 1.05rem; color: var(--text); line-height: 1.6; margin-bottom: 30px;">
+                    are you sure you want to permanently destroy this communication
+                </p>
+                <div class="modal-actions" style="justify-content: flex-end; gap: 15px; width: 100%;">
+                    <button class="close-modal" onclick="hideDispellWarning()">[ Cancel ]</button>
+                    <button class="cast-btn danger" onclick="confirmDispell()">Confirm Dispell</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap');
 
@@ -328,6 +406,7 @@
         }
 
         .talisman-header-top {
+            type: text;
             font-size: 0.65rem;
             color: #666;
             margin-bottom: 15px;
@@ -376,91 +455,14 @@
             justify-content: space-between;
         }
     </style>
-</head>
-<body>
 
-    <header>
-        <div class="system-status">SYS_TIME: 2050.11.03 // <span>TRANSMITTING TO 2026.11.03</span></div>
-        <h1>Chrono-Hex</h1>
-        <button class="cast-btn" onclick="openCastModal()">[+ Transmit Advice]</button>
-    </header>
+    <!-- Use type="module" with ESM CDN import to reliably instantiate Supabase in browser -->
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
-    <!-- Drifting Grid Workspace -->
-    <div id="matrix-space"></div>
-
-    <!-- Cast Advice Modal -->
-    <div id="cast-modal" class="overlay">
-        <div class="modal-box">
-            <h2>// ONE WAY COMMUNICATION TO 2026</h2>
-            <p class="modal-subtitle">Type your transmission and select your bind rune sigil carefully.</p>
-            
-            <textarea id="advice-input" placeholder="e.g. Be good to the kids. Buy physical land." maxlength="250"></textarea>
-            
-            <span class="rune-selector-label">// SEAL WITH BIND RUNE</span>
-            <div class="rune-grid" id="rune-selection-grid">
-                <!-- Injected via JavaScript -->
-            </div>
-
-            <div class="modal-actions">
-                <button class="close-modal" onclick="closeModals()">[ Abort ]</button>
-                <button class="cast-btn" onclick="submitAdvice()">Transmit Spell</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Grabbed Advice / Talisman Export Modal -->
-    <div id="grab-modal" class="overlay">
-        <div class="modal-box" style="text-align: center; max-width: 600px; align-items: center;">
-            <div id="grab-main-view">
-                <h2>// HEX CAPTURED</h2>
-                <p class="modal-subtitle">You have snatched a transmission out of the air. Preserve locally or dispell.</p>
-                
-                <!-- Render Target for JPEG -->
-                <div style="display: inline-block; margin-bottom: 10px; margin-top: 15px;">
-                    <div id="talisman-render" class="talisman-card">
-                        <div class="talisman-header-top">
-                            <span>CHRONO-ARCHIVE // SPECIMEN 2050</span>
-                            <span id="render-rune-name" style="text-transform: uppercase;"></span>
-                        </div>
-                        <div class="talisman-body-layout">
-                            <div id="render-rune-icon" class="talisman-rune-target"></div>
-                            <div id="render-text" class="talisman-content"></div>
-                        </div>
-                        <div class="talisman-footer">
-                            <span>ORIGIN: 2050</span>
-                            <span>TARGET: 2026</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="modal-actions" style="justify-content: space-between; width: 100%; margin-top: 20px;">
-                    <button class="close-modal" onclick="closeModals()">[ Dismiss ]</button>
-                    <div style="display: flex; gap: 10px;">
-                        <button class="cast-btn danger" onclick="showDispellWarning()">Dispell</button>
-                        <button class="cast-btn" onclick="downloadTalisman()">Download JPEG Talisman</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Dispell Warning View -->
-            <div id="grab-warn-view" style="display: none; width: 100%; text-align: left; padding: 20px 0;">
-                <h2 style="color: var(--alert); margin-bottom: 15px;">// WARNING: DISPELL PROTOCOL</h2>
-                <p style="font-size: 1.05rem; color: var(--text); line-height: 1.6; margin-bottom: 30px;">
-                    are you sure you want to permanently destroy this communication
-                </p>
-                <div class="modal-actions" style="justify-content: flex-end; gap: 15px; width: 100%;">
-                    <button class="close-modal" onclick="hideDispellWarning()">[ Cancel ]</button>
-                    <button class="cast-btn danger" onclick="confirmDispell()">Confirm Dispell</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Connected Supabase Project Configuration
         const SUPABASE_URL = 'https://lagbighslghkednwrnit.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_v1DJ2NwxcA252wj2R2e3Pg_1vQaDrom';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
         const runeSvgs = {
             "balance": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 283.46 283.46"><style>.cls-rune{fill:none;stroke:#fff;stroke-linejoin:round;stroke-width:5px;}</style><line class="cls-rune" x1="141.73" y1="28.35" x2="141.73" y2="255.12"/><rect class="cls-rune" x="28.35" y="28.35" width="226.77" height="226.77"/><polyline class="cls-rune" points="141.73 56.69 56.69 141.73 141.73 226.77"/><polygon class="cls-rune" points="141.73 141.73 99.21 99.21 99.21 184.25 141.73 141.73"/><polyline class="cls-rune" points="141.73 56.69 226.77 141.73 141.73 226.77"/><polygon class="cls-rune" points="141.73 141.73 184.25 99.21 184.25 184.25 141.73 141.73"/></svg>`,
@@ -637,49 +639,48 @@
             animationFrameId = requestAnimationFrame(loop);
         }
 
-        // Modal Controls
-        function openCastModal() {
+        // Expose functions globally to HTML buttons since this is inside a type="module" scope
+        window.openCastModal = function() {
             initRuneSelector();
             document.getElementById('cast-modal').style.display = 'flex';
-        }
+        };
 
-        function openGrabModal(item) {
+        window.openGrabModal = function(item) {
             currentSelectedAdviceId = item.id;
             document.getElementById('render-text').innerText = `"${item.text}"`;
             document.getElementById('render-rune-name').innerText = item.rune;
             document.getElementById('render-rune-icon').innerHTML = runeSvgs[item.rune] || runeSvgs["balance"];
             
-            // Reset views
             document.getElementById('grab-main-view').style.display = 'block';
             document.getElementById('grab-warn-view').style.display = 'none';
             document.getElementById('grab-modal').style.display = 'flex';
-        }
+        };
 
-        function showDispellWarning() {
+        window.showDispellWarning = function() {
             document.getElementById('grab-main-view').style.display = 'none';
             document.getElementById('grab-warn-view').style.display = 'block';
-        }
+        };
 
-        function hideDispellWarning() {
+        window.hideDispellWarning = function() {
             document.getElementById('grab-warn-view').style.display = 'none';
             document.getElementById('grab-main-view').style.display = 'block';
-        }
+        };
 
-        async function confirmDispell() {
+        window.confirmDispell = async function() {
             if (currentSelectedAdviceId) {
                 await deleteAdviceFromStorage(currentSelectedAdviceId);
             }
-            closeModals();
+            window.closeModals();
             await initMatrix();
-        }
+        };
 
-        function closeModals() {
+        window.closeModals = function() {
             document.querySelectorAll('.overlay').forEach(el => el.style.display = 'none');
             document.getElementById('advice-input').value = '';
             currentSelectedAdviceId = null;
-        }
+        };
 
-        async function submitAdvice() {
+        window.submitAdvice = async function() {
             const text = document.getElementById('advice-input').value.trim();
             if(!text) return;
             
@@ -687,12 +688,11 @@
             const rune = selectedRuneInput ? selectedRuneInput.value : 'balance';
 
             await saveAdviceToStorage(text, rune);
-            closeModals();
+            window.closeModals();
             await initMatrix();
-        }
+        };
 
-        // JPEG Export using html2canvas
-        function downloadTalisman() {
+        window.downloadTalisman = function() {
             const targetCard = document.getElementById('talisman-render');
             html2canvas(targetCard, {
                 backgroundColor: '#000000',
@@ -703,8 +703,9 @@
                 link.href = canvas.toDataURL('image/jpeg', 0.9);
                 link.click();
             });
-        }
+        };
 
+        // Initialize application on load
         window.onload = initMatrix;
         window.onresize = initMatrix;
     </script>
