@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CHRONO-HEX // 2050 TRANSMISSION</title>
+    <!-- Include html2canvas for JPEG exporting -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap');
+
+        :root {
+            --bg: #030303;
+            --text: #e0e0e0;
+            --dim-text: #666666;
+            --accent: #ffffff;
+            --alert: #ff3333;
+            --border: #333333;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Courier Prime', monospace;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* CRT Scanline Overlay */
+        body::after {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            z-index: 999;
+            background-size: 100% 4px, 6px 100%;
+            pointer-events: none;
+        }
+
+        /* Header UI */
+        header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px dashed var(--border);
+            background: rgba(3, 3, 3, 0.9);
+            z-index: 10;
+        }
+
+        .system-status {
+            font-size: 0.8rem;
+            color: var(--dim-text);
+            letter-spacing: 2px;
+        }
+
+        .system-status span {
+            color: var(--alert);
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        h1 {
+            font-size: 1.1rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--accent);
+        }
+
+        .cast-btn {
+            background: transparent;
+            color: var(--accent);
+            border: 1px solid var(--accent);
+            padding: 8px 16px;
+            font-family: 'Courier Prime', monospace;
+            font-size: 0.9rem;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: all 0.2s ease;
+        }
+
+        .cast-btn:hover {
+            background: var(--accent);
+            color: var(--bg);
+        }
+
+        .cast-btn.danger {
+            border-color: var(--alert);
+            color: var(--alert);
+        }
+
+        .cast-btn.danger:hover {
+            background: var(--alert);
+            color: var(--bg);
+        }
+
+        /* Floating Drift Workspace */
+        #matrix-space {
+            position: absolute;
+            top: 60px;
+            left: 0;
+            width: 100%;
+            height: calc(100vh - 60px);
+            overflow: hidden;
+        }
+
+        .floating-advice {
+            position: absolute;
+            padding: 14px;
+            background: rgba(10, 10, 10, 0.92);
+            border: 1px solid var(--border);
+            color: var(--text);
+            font-size: 0.9rem;
+            max-width: 320px;
+            cursor: pointer;
+            user-select: none;
+            white-space: pre-wrap;
+            word-break: break-word;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            will-change: transform, left, top;
+        }
+
+        .floating-advice:hover {
+            border-color: var(--accent);
+            transform: scale(1.06);
+            z-index: 50;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+        }
+
+        .advice-rune-icon {
+            width: 40px;
+            height: 40px;
+            flex-shrink: 0;
+            border: 1px solid var(--border);
+            background: #000;
+            padding: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .advice-rune-icon svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .advice-body {
+            flex-grow: 1;
+        }
+
+        .floating-advice .timestamp {
+            display: block;
+            font-size: 0.6rem;
+            color: var(--dim-text);
+            margin-top: 6px;
+            letter-spacing: 1px;
+        }
+
+        /* Modal / Casting Interface Overlay */
+        .overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.92);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .modal-box {
+            background: var(--bg);
+            border: 1px solid var(--accent);
+            width: 100%;
+            max-width: 720px;
+            padding: 30px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .modal-box h2 {
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .modal-subtitle {
+            font-size: 0.9rem;
+            color: var(--dim-text);
+        }
+
+        textarea {
+            width: 100%;
+            height: 100px;
+            background: #080808;
+            border: 1px solid var(--border);
+            color: var(--accent);
+            font-family: 'Courier Prime', monospace;
+            padding: 14px;
+            font-size: 0.95rem;
+            resize: none;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .rune-selector-label {
+            font-size: 0.9rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .rune-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+        }
+
+        .rune-option {
+            background: #080808;
+            border: 1px solid var(--border);
+            padding: 10px 6px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            height: 130px;
+        }
+
+        .rune-option input[type="radio"] {
+            display: none;
+        }
+
+        .rune-icon-container {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .rune-option svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .rune-option span {
+            font-size: 0.75rem;
+            color: var(--dim-text);
+            display: block;
+            text-transform: uppercase;
+            line-height: 1.2;
+            width: 100%;
+        }
+
+        .rune-option:hover, .rune-option.selected {
+            border-color: var(--accent);
+            background: #111;
+        }
+
+        .rune-option.selected span {
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 5px;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            color: var(--dim-text);
+            font-family: 'Courier Prime', monospace;
+            font-size: 0.95rem;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .close-modal:hover {
+            color: var(--accent);
+        }
+
+        /* Talisman Capture View Styling */
+        .talisman-card {
+            background: #000000;
+            border: 2px solid #ffffff;
+            padding: 35px;
+            width: 440px;
+            text-align: left;
+            position: relative;
+            font-family: 'Courier Prime', monospace;
+        }
+
+        .talisman-header-top {
+            font-size: 0.65rem;
+            color: #666;
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .talisman-body-layout {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            margin-bottom: 30px;
+            border-bottom: 1px dashed #333;
+            padding-bottom: 25px;
+        }
+
+        .talisman-rune-target {
+            width: 80px;
+            height: 80px;
+            flex-shrink: 0;
+            border: 1px solid #444;
+            background: #000;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .talisman-rune-target svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .talisman-content {
+            font-size: 1rem;
+            line-height: 1.5;
+            color: #ffffff;
+            word-break: break-word;
+        }
+
+        .talisman-footer {
+            font-size: 0.7rem;
+            color: #888;
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="system-status">SYS_TIME: 2050.11.03 // <span>TRANSMITTING TO 2026.11.03</span></div>
+        <h1>Chrono-Hex</h1>
+        <button class="cast-btn" onclick="openCastModal()">[+ Transmit Advice]</button>
+    </header>
+
+    <!-- Drifting Grid Workspace -->
+    <div id="matrix-space"></div>
+
+    <!-- Cast Advice Modal -->
+    <div id="cast-modal" class="overlay">
+        <div class="modal-box">
+            <h2>// ONE WAY COMMUNICATION TO 2026</h2>
+            <p class="modal-subtitle">Type your transmission and select your bind rune sigil carefully.</p>
+            
+            <textarea id="advice-input" placeholder="e.g. Be good to the kids. Buy physical land." maxlength="250"></textarea>
+            
+            <span class="rune-selector-label">// SEAL WITH BIND RUNE</span>
+            <div class="rune-grid" id="rune-selection-grid">
+                <!-- Injected via JavaScript -->
+            </div>
+
+            <div class="modal-actions">
+                <button class="close-modal" onclick="closeModals()">[ Abort ]</button>
+                <button class="cast-btn" onclick="submitAdvice()">Transmit Spell</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grabbed Advice / Talisman Export Modal -->
+    <div id="grab-modal" class="overlay">
+        <div class="modal-box" style="text-align: center; max-width: 600px; align-items: center;">
+            <div id="grab-main-view">
+                <h2>// HEX CAPTURED</h2>
+                <p class="modal-subtitle">You have snatched a transmission out of the air. Preserve locally or dispell.</p>
+                
+                <!-- Render Target for JPEG -->
+                <div style="display: inline-block; margin-bottom: 10px; margin-top: 15px;">
+                    <div id="talisman-render" class="talisman-card">
+                        <div class="talisman-header-top">
+                            <span>CHRONO-ARCHIVE // SPECIMEN 2050</span>
+                            <span id="render-rune-name" style="text-transform: uppercase;"></span>
+                        </div>
+                        <div class="talisman-body-layout">
+                            <div id="render-rune-icon" class="talisman-rune-target"></div>
+                            <div id="render-text" class="talisman-content"></div>
+                        </div>
+                        <div class="talisman-footer">
+                            <span>ORIGIN: 2050</span>
+                            <span>TARGET: 2026</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-actions" style="justify-content: space-between; width: 100%; margin-top: 20px;">
+                    <button class="close-modal" onclick="closeModals()">[ Dismiss ]</button>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="cast-btn danger" onclick="showDispellWarning()">Dispell</button>
+                        <button class="cast-btn" onclick="downloadTalisman()">Download JPEG Talisman</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dispell Warning View -->
+            <div id="grab-warn-view" style="display: none; width: 100%; text-align: left; padding: 20px 0;">
+                <h2 style="color: var(--alert); margin-bottom: 15px;">// WARNING: DISPELL PROTOCOL</h2>
+                <p style="font-size: 1.05rem; color: var(--text); line-height: 1.6; margin-bottom: 30px;">
+                    Are you sure you want to permanently destroy this communication?
+                </p>
+                <div class="modal-actions" style="justify-content: flex-end; gap: 15px; width: 100%;">
+                    <button class="close-modal" onclick="hideDispellWarning()">[ Cancel ]</button>
+                    <button class="cast-btn danger" onclick="confirmDispell()">Confirm Dispell</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const runeSvgs = {
+            "balance": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 283.46 283.46"><style>.cls-rune{fill:none;stroke:#fff;stroke-linejoin:round;stroke-width:5px;}</style><line class="cls-rune" x1="141.73" y1="28.35" x2="141.73" y2="255.12"/><rect class="cls-rune" x="28.35" y="28.35" width="226.77" height="226.77"/><polyline class="cls-rune" points="141.73 56.69 56.69 141.73 141.73 226.77"/><polygon class="cls-rune" points="141.73 141.73 99.21 99.21 99.21 184.25 141.73 141.73"/><polyline class="cls-rune" points="141.73 56.69 226.77 141.73 141.73 226.77"/><polygon class="cls-rune" points="141.73 141.73 184.25 99.21 184.25 184.25 141.73 141.73"/></svg>`,
+            
+            "connection": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 283.46 283.46"><style>.cls-rune{fill:none;stroke:#fff;stroke-linejoin:round;stroke-width:5px;}</style><polyline class="cls-rune" points="255.12 166.54 255.12 251.57 170.08 251.57"/><polyline class="cls-rune" points="170.08 24.8 255.12 24.8 255.12 109.84"/><polyline class="cls-rune" points="28.35 109.84 28.35 24.8 113.39 24.8"/><polyline class="cls-rune" points="113.39 251.57 28.35 251.57 28.35 166.54"/><polyline class="cls-rune" points="113.39 24.8 113.39 99.21 141.73 70.87 170.08 99.21 170.08 24.8"/><polyline class="cls-rune" points="28.35 166.54 102.76 166.54 74.41 138.19 102.76 109.84 28.35 109.84"/><polyline class="cls-rune" points="46.06 109.84 74.41 138.19 46.06 166.54"/><polyline class="cls-rune" points="255.12 109.84 180.71 109.84 209.06 138.19 180.71 166.54 255.12 166.54"/><polyline class="cls-rune" points="237.4 166.54 209.06 138.19 237.4 109.84"/><polyline class="cls-rune" points="170.08 251.57 170.08 177.17 141.73 205.51 113.39 177.17 113.39 251.57"/><polyline class="cls-rune" points="180.71 205.51 237.4 205.51 237.4 233.86 209.06 233.86 209.06 177.17"/><polyline class="cls-rune" points="209.06 99.21 209.06 42.52 237.4 42.52 237.4 70.87 180.71 70.87"/><polyline class="cls-rune" points="102.76 70.87 46.06 70.87 46.06 42.52 74.41 42.52 74.41 99.21"/><line class="cls-rune" x1="121.69" y1="118.15" x2="161.78" y2="158.23"/><line class="cls-rune" x1="161.78" y1="118.15" x2="121.69" y2="158.23"/><polyline class="cls-rune" points="74.41 177.17 74.41 233.86 46.06 233.86 46.06 205.51 102.76 205.51"/></svg>`,
+            
+            "new beginnings": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 283.46 283.46"><style>.cls-rune{fill:none;stroke:#fff;stroke-linejoin:round;stroke-width:5px;}</style><line class="cls-rune" x1="85.04" y1="28.35" x2="85.04" y2="255.12"/><line class="cls-rune" x1="141.73" y1="28.35" x2="141.73" y2="255.12"/><line class="cls-rune" x1="198.43" y1="28.35" x2="198.43" y2="255.12"/><polygon class="cls-rune" points="85.04 198.43 28.35 255.12 27.86 255.61 28.35 28.35 85.04 85.04 28.35 141.73 85.04 198.43"/><line class="cls-rune" x1="85.04" y1="85.04" x2="141.73" y2="28.35"/><line class="cls-rune" x1="84.39" y1="145.28" x2="141.08" y2="88.58"/><line class="cls-rune" x1="141.73" y1="153.02" x2="198.43" y2="96.32"/><line class="cls-rune" x1="141.08" y1="184.25" x2="197.77" y2="127.56"/><line class="cls-rune" x1="198.43" y1="28.35" x2="255.12" y2="85.04"/><polyline class="cls-rune" points="56.69 28.35 255.12 28.35 255.12 255.12 56.69 255.12"/></svg>`,
+            
+            "regeneration": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 283.46 283.46"><style>.cls-rune{fill:none;stroke:#fff;stroke-linejoin:round;stroke-width:5px;}</style><line class="cls-rune" x1="28.35" y1="141.73" x2="255.12" y2="141.73"/><polyline class="cls-rune" points="113.39 170.08 141.73 198.43 141.73 85.04 170.08 113.39"/><polyline class="cls-rune" points="170.08 170.08 198.43 198.43 198.43 85.04 226.77 113.39"/><polyline class="cls-rune" points="53.15 170.08 81.5 198.43 81.5 85.04 109.84 113.39"/><polygon class="cls-rune" points="28.35 28.35 141.73 56.69 141.73 28.35 255.12 56.69 255.12 255.12 141.73 226.77 141.73 255.12 28.35 226.77 28.35 28.35"/></svg>`,
+            
+            "right place right time": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 283.46 283.46"><style>.cls-rune{fill:none;stroke:#fff;stroke-linejoin:round;stroke-width:5px;}</style><polyline class="cls-rune" points="141.73 251.81 141.73 25.04 221.91 58.25 61.56 218.6"/><line class="cls-rune" x1="61.56" y1="58.25" x2="221.91" y2="218.6"/><line class="cls-rune" x1="28.35" y1="138.43" x2="255.12" y2="138.43"/><path class="cls-rune" d="M239.95,81.73c9.65,16.68,15.17,36.04,15.17,56.69h0c0,62.62-50.76,113.39-113.39,113.39h0c-62.62,0-113.39-50.76-113.39-113.39h0c0-52.83,36.14-97.23,85.04-109.81"/></svg>`
+        };
+
+        const defaultAdvices = [
+            { id: 'def-1', text: "Learn how to filter your own water. The municipal grid is a joke by 2038.", rune: "balance" },
+            { id: 'def-2', text: "Keep a paper notebook. Digital ledgers vanish when the solar flare hits.", rune: "connection" },
+            { id: 'def-3', text: "To my 2026 self: Stop stressing over career paths that AI replaced three years from now. Build community instead.", rune: "new beginnings" },
+            { id: 'def-4', text: "Plant real trees now. You'll need the shade.", rune: "right place right time" }
+        ];
+
+        function getStoredAdvices() {
+            const data = localStorage.getItem('cyber_witch_advices_timeless_v2');
+            if (!data) {
+                localStorage.setItem('cyber_witch_advices_timeless_v2', JSON.stringify(defaultAdvices));
+                return defaultAdvices;
+            }
+            return JSON.parse(data);
+        }
+
+        function saveAdviceToStorage(text, rune) {
+            const advices = getStoredAdvices();
+            const newEntry = {
+                id: 'adv_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+                text: text,
+                rune: rune
+            };
+            advices.unshift(newEntry);
+            localStorage.setItem('cyber_witch_advices_timeless_v2', JSON.stringify(advices));
+            return newEntry;
+        }
+
+        function deleteAdviceFromStorage(id) {
+            let advices = getStoredAdvices();
+            advices = advices.filter(item => item.id !== id);
+            localStorage.setItem('cyber_witch_advices_timeless_v2', JSON.stringify(advices));
+        }
+
+        function initRuneSelector() {
+            const grid = document.getElementById('rune-selection-grid');
+            grid.innerHTML = '';
+            let first = true;
+
+            for (const [name, svgCode] of Object.entries(runeSvgs)) {
+                const div = document.createElement('div');
+                div.className = `rune-option ${first ? 'selected' : ''}`;
+                div.innerHTML = `
+                    <input type="radio" name="rune-choice" value="${name}" ${first ? 'checked' : ''}>
+                    <div class="rune-icon-container">${svgCode}</div>
+                    <span>${name}</span>
+                `;
+                div.onclick = () => {
+                    document.querySelectorAll('.rune-option').forEach(el => el.classList.remove('selected'));
+                    div.classList.add('selected');
+                    div.querySelector('input').checked = true;
+                };
+                grid.appendChild(div);
+                first = false;
+            }
+        }
+
+        // Mouse tracking for physics repulsion
+        let mouseX = -9999;
+        let mouseY = -9999;
+        window.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+
+        let activeNodes = [];
+        let animationFrameId = null;
+        let currentSelectedAdviceId = null;
+
+        function initMatrix() {
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            const space = document.getElementById('matrix-space');
+            space.innerHTML = '';
+            const advices = getStoredAdvices();
+            activeNodes = [];
+
+            advices.forEach((item) => {
+                const el = document.createElement('div');
+                el.className = 'floating-advice';
+                
+                const runeHtml = runeSvgs[item.rune] || runeSvgs["balance"];
+
+                el.innerHTML = `
+                    <div class="advice-rune-icon">${runeHtml}</div>
+                    <div class="advice-body">
+                        "${item.text}"
+                        <span class="timestamp">SIGIL: ${item.rune.toUpperCase()} // ORIGIN: 2050</span>
+                    </div>
+                `;
+                
+                const maxW = Math.max(50, space.clientWidth - 350);
+                const maxH = Math.max(50, space.clientHeight - 180);
+                const startX = Math.max(20, Math.random() * maxW);
+                const startY = Math.max(20, Math.random() * maxH);
+
+                el.style.left = `${startX}px`;
+                el.style.top = `${startY}px`;
+
+                el.onclick = () => openGrabModal(item);
+                space.appendChild(el);
+
+                activeNodes.push({
+                    element: el,
+                    x: startX,
+                    y: startY,
+                    baseX: startX,
+                    baseY: startY,
+                    vx: 0,
+                    vy: 0,
+                    angleOffset: Math.random() * 100,
+                    speed: 0.2 + Math.random() * 0.2
+                });
+            });
+
+            startPhysicsLoop();
+        }
+
+        // Physics animation loop for smooth inertia and cursor repulsion
+        function startPhysicsLoop() {
+            function loop() {
+                const time = Date.now() * 0.001;
+                const space = document.getElementById('matrix-space');
+                if (!space) return;
+
+                activeNodes.forEach((node) => {
+                    const driftX = node.baseX + Math.sin(time * node.speed + node.angleOffset) * 40;
+                    const driftY = node.baseY + Math.cos(time * node.speed * 0.8 + node.angleOffset) * 40;
+
+                    const rect = node.element.getBoundingClientRect();
+                    const centerX = rect.left + rect.width / 2;
+                    const centerY = rect.top + rect.height / 2;
+
+                    const dx = centerX - mouseX;
+                    const dy = centerY - mouseY;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    const repulsionRadius = 100;
+
+                    if (dist < repulsionRadius && dist > 0) {
+                        const force = (repulsionRadius - dist) / repulsionRadius;
+                        const pushAngle = Math.atan2(dy, dx);
+                        node.vx += Math.cos(pushAngle) * force * 2.2;
+                        node.vy += Math.sin(pushAngle) * force * 2.2;
+                    }
+
+                    const spring = 0.035;
+                    node.vx += (driftX - node.x) * spring;
+                    node.vy += (driftY - node.y) * spring;
+
+                    node.vx *= 0.84;
+                    node.vy *= 0.84;
+
+                    node.x += node.vx;
+                    node.y += node.vy;
+
+                    const maxX = space.clientWidth - node.element.offsetWidth - 20;
+                    const maxY = space.clientHeight - node.element.offsetHeight - 20;
+                    node.x = Math.max(20, Math.min(maxX, node.x));
+                    node.y = Math.max(20, Math.min(maxY, node.y));
+
+                    node.element.style.left = `${node.x}px`;
+                    node.element.style.top = `${node.y}px`;
+                });
+
+                animationFrameId = requestAnimationFrame(loop);
+            }
+            animationFrameId = requestAnimationFrame(loop);
+        }
+
+        // Modal Controls
+        function openCastModal() {
+            initRuneSelector();
+            document.getElementById('cast-modal').style.display = 'flex';
+        }
+
+        function openGrabModal(item) {
+            currentSelectedAdviceId = item.id;
+            document.getElementById('render-text').innerText = `"${item.text}"`;
+            document.getElementById('render-rune-name').innerText = item.rune;
+            document.getElementById('render-rune-icon').innerHTML = runeSvgs[item.rune] || runeSvgs["balance"];
+            
+            // Reset views
+            document.getElementById('grab-main-view').style.display = 'block';
+            document.getElementById('grab-warn-view').style.display = 'none';
+            document.getElementById('grab-modal').style.display = 'flex';
+        }
+
+        function showDispellWarning() {
+            document.getElementById('grab-main-view').style.display = 'none';
+            document.getElementById('grab-warn-view').style.display = 'block';
+        }
+
+        function hideDispellWarning() {
+            document.getElementById('grab-warn-view').style.display = 'none';
+            document.getElementById('grab-main-view').style.display = 'block';
+        }
+
+        function confirmDispell() {
+            if (currentSelectedAdviceId) {
+                deleteAdviceFromStorage(currentSelectedAdviceId);
+            }
+            closeModals();
+            initMatrix();
+        }
+
+        function closeModals() {
+            document.querySelectorAll('.overlay').forEach(el => el.style.display = 'none');
+            document.getElementById('advice-input').value = '';
+            currentSelectedAdviceId = null;
+        }
+
+        function submitAdvice() {
+            const text = document.getElementById('advice-input').value.trim();
+            if(!text) return;
+            
+            const selectedRuneInput = document.querySelector('input[name="rune-choice"]:checked');
+            const rune = selectedRuneInput ? selectedRuneInput.value : 'balance';
+
+            saveAdviceToStorage(text, rune);
+            closeModals();
+            initMatrix();
+        }
+
+        // JPEG Export using html2canvas
+        function downloadTalisman() {
+            const targetCard = document.getElementById('talisman-render');
+            html2canvas(targetCard, {
+                backgroundColor: '#000000',
+                scale: 2 
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'cyber-witch-talisman-2050.jpg';
+                link.href = canvas.toDataURL('image/jpeg', 0.9);
+                link.click();
+            });
+        }
+
+        window.onload = initMatrix;
+        window.onresize = initMatrix;
+    </script>
+</body>
+</html>
