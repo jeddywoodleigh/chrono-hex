@@ -24,7 +24,7 @@
     <div id="cast-modal" class="overlay">
         <div class="modal-box">
             <h2>// ONE WAY COMMUNICATION TO 2026</h2>
-            <p class="modal-subtitle">Type your transmission and select your bind rune sigil carefully.</p>
+            <p class="modal-subtitle">Type your transmission and select your bind rune sigil below.</p>
             
             <textarea id="advice-input" placeholder="e.g. Be good to the kids. Buy physical land." maxlength="250"></textarea>
             
@@ -45,7 +45,7 @@
                 <h2>// HEX CAPTURED</h2>
                 <p class="modal-subtitle">You have snatched a transmission out of the air. Preserve locally or dispell.</p>
                 
-                <div style="display: inline-block; margin-bottom: 10px; margin-top: 15px;">
+                <div style="display: inline-block; margin-bottom: 10px; margin-top: 15px; max-width: 100%; overflow-x: auto;">
                     <div id="talisman-render" class="talisman-card">
                         <div class="talisman-header-top">
                             <span>CHRONO-ARCHIVE // SPECIMEN 2050</span>
@@ -62,9 +62,9 @@
                     </div>
                 </div>
 
-                <div class="modal-actions" style="justify-content: space-between; width: 100%; margin-top: 20px;">
+                <div class="modal-actions" style="justify-content: space-between; width: 100%; margin-top: 20px; flex-wrap: wrap; gap: 10px;">
                     <button class="close-modal dismiss-btn">[ Dismiss ]</button>
-                    <div style="display: flex; gap: 10px;">
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                         <button class="cast-btn danger" id="show-dispell-btn">Dispell</button>
                         <button class="cast-btn" id="download-talisman-btn">Download JPEG Talisman</button>
                     </div>
@@ -122,16 +122,16 @@
         header {
             position: absolute;
             top: 0; left: 0; width: 100%;
-            padding: 20px;
+            padding: 15px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-bottom: 1px dashed var(--border);
-            background: rgba(3, 3, 3, 0.9);
+            background: rgba(3, 3, 3, 0.95);
             z-index: 10;
         }
 
-        .system-status { font-size: 0.8rem; color: var(--dim-text); letter-spacing: 2px; }
+        .system-status { font-size: 0.75rem; color: var(--dim-text); letter-spacing: 1px; }
         .system-status span { color: var(--alert); animation: blink 1s infinite; }
 
         @keyframes blink {
@@ -139,15 +139,15 @@
             50% { opacity: 0.3; }
         }
 
-        h1 { font-size: 1.1rem; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); }
+        h1 { font-size: 1rem; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); }
 
         .cast-btn {
             background: transparent;
             color: var(--accent);
             border: 1px solid var(--accent);
-            padding: 8px 16px;
+            padding: 6px 12px;
             font-family: 'Courier Prime', monospace;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             cursor: pointer;
             text-transform: uppercase;
             transition: all 0.2s ease;
@@ -206,57 +206,77 @@
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.92);
             display: none; justify-content: center; align-items: center;
-            z-index: 100; overflow-y: auto; padding: 20px;
+            z-index: 100; overflow-y: auto; padding: 15px;
         }
 
         .modal-box {
             background: var(--bg);
             border: 1px solid var(--accent);
-            width: 100%; max-width: 720px;
-            padding: 30px; position: relative;
-            display: flex; flex-direction: column; gap: 16px;
+            width: 100%; max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 20px; position: relative;
+            display: flex; flex-direction: column; gap: 14px;
         }
 
-        .modal-box h2 { font-size: 1.2rem; letter-spacing: 2px; text-transform: uppercase; }
-        .modal-subtitle { font-size: 0.9rem; color: var(--dim-text); }
+        .modal-box h2 { font-size: 1.1rem; letter-spacing: 2px; text-transform: uppercase; }
+        .modal-subtitle { font-size: 0.85rem; color: var(--dim-text); }
 
         textarea {
-            width: 100%; height: 100px;
+            width: 100%; height: 90px;
             background: #080808; border: 1px solid var(--border);
             color: var(--accent); font-family: 'Courier Prime', monospace;
-            padding: 14px; font-size: 0.95rem; resize: none;
+            padding: 12px; font-size: 0.9rem; resize: none;
         }
         textarea:focus { outline: none; border-color: var(--accent); }
 
-        .rune-selector-label { font-size: 0.9rem; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; }
-        .rune-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+        .rune-selector-label { font-size: 0.85rem; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; }
+        
+        .rune-grid { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 10px; 
+            max-height: 280px; 
+            overflow-y: auto; 
+            padding-right: 4px;
+            border: 1px solid var(--border);
+            padding: 10px;
+            background: #050505;
+        }
 
         .rune-option {
             background: #080808; border: 1px solid var(--border);
-            padding: 10px 6px; cursor: pointer; text-align: center;
-            display: flex; flex-direction: column; align-items: center; justify-content: space-between;
-            height: 130px;
+            padding: 10px; cursor: pointer;
+            display: flex; align-items: center; gap: 15px;
+            width: 100%;
         }
         .rune-option input[type="radio"] { display: none; }
-        .rune-icon-container { width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .rune-icon-container { width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: #000; border: 1px solid var(--border); padding: 2px;}
         .rune-option svg { width: 100%; height: 100%; display: block; }
-        .rune-option span { font-size: 0.75rem; color: var(--dim-text); display: block; text-transform: uppercase; line-height: 1.2; width: 100%; }
+        .rune-option span { font-size: 0.85rem; color: var(--dim-text); text-transform: uppercase; }
         .rune-option:hover, .rune-option.selected { border-color: var(--accent); background: #111; }
         .rune-option.selected span { color: var(--accent); font-weight: bold; }
 
         .modal-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 5px; }
-        .close-modal { background: none; border: none; color: var(--dim-text); font-family: 'Courier Prime', monospace; font-size: 0.95rem; cursor: pointer; text-decoration: underline; }
+        .close-modal { background: none; border: none; color: var(--dim-text); font-family: 'Courier Prime', monospace; font-size: 0.9rem; cursor: pointer; text-decoration: underline; }
         .close-modal:hover { color: var(--accent); }
 
         .talisman-card {
             background: #000000; border: 2px solid #ffffff;
-            padding: 35px; width: 440px; text-align: left; position: relative;
+            padding: 25px; width: 100%; max-width: 400px; text-align: left; position: relative;
         }
-        .talisman-header-top { font-size: 0.65rem; color: #666; margin-bottom: 15px; letter-spacing: 1px; display: flex; justify-content: space-between; }
-        .talisman-body-layout { display: flex; gap: 20px; align-items: center; margin-bottom: 30px; border-bottom: 1px dashed #333; padding-bottom: 25px; }
-        .talisman-rune-target { width: 80px; height: 80px; flex-shrink: 0; border: 1px solid #444; background: #000; padding: 4px; display: flex; align-items: center; justify-content: center; }
-        .talisman-content { font-size: 1rem; line-height: 1.5; color: #ffffff; word-break: break-word; }
+        .talisman-header-top { font-size: 0.65rem; color: #666; margin-bottom: 12px; letter-spacing: 1px; display: flex; justify-content: space-between; }
+        .talisman-body-layout { display: flex; gap: 15px; align-items: center; margin-bottom: 20px; border-bottom: 1px dashed #333; padding-bottom: 20px; }
+        .talisman-rune-target { width: 70px; height: 70px; flex-shrink: 0; border: 1px solid #444; background: #000; padding: 4px; display: flex; align-items: center; justify-content: center; }
+        .talisman-content { font-size: 0.95rem; line-height: 1.4; color: #ffffff; word-break: break-word; }
         .talisman-footer { font-size: 0.7rem; color: #888; display: flex; justify-content: space-between; }
+
+        /* Hide system status text on mobile screens */
+        @media (max-width: 768px) {
+            .system-status {
+                display: none;
+            }
+        }
     </style>
 
     <script>
@@ -357,10 +377,10 @@
                     </div>
                 `;
                 
-                const maxW = Math.max(50, space.clientWidth - 350);
-                const maxH = Math.max(50, space.clientHeight - 180);
-                const startX = Math.max(20, Math.random() * maxW);
-                const startY = Math.max(20, Math.random() * maxH);
+                const maxW = Math.max(50, space.clientWidth - 320);
+                const maxH = Math.max(50, space.clientHeight - 150);
+                const startX = Math.max(15, Math.random() * maxW);
+                const startY = Math.max(15, Math.random() * maxH);
 
                 el.style.left = `${startX}px`;
                 el.style.top = `${startY}px`;
@@ -388,8 +408,8 @@
                 if (!space) return;
 
                 activeNodes.forEach((node) => {
-                    const driftX = node.baseX + Math.sin(time * node.speed + node.angleOffset) * 40;
-                    const driftY = node.baseY + Math.cos(time * node.speed * 0.8 + node.angleOffset) * 40;
+                    const driftX = node.baseX + Math.sin(time * node.speed + node.angleOffset) * 30;
+                    const driftY = node.baseY + Math.cos(time * node.speed * 0.8 + node.angleOffset) * 30;
 
                     const rect = node.element.getBoundingClientRect();
                     const centerX = rect.left + rect.width / 2;
@@ -398,13 +418,13 @@
                     const dx = centerX - mouseX;
                     const dy = centerY - mouseY;
                     const dist = Math.sqrt(dx * dx + dy * dy);
-                    const repulsionRadius = 160;
+                    const repulsionRadius = 140;
 
                     if (dist < repulsionRadius && dist > 0) {
                         const force = (repulsionRadius - dist) / repulsionRadius;
                         const pushAngle = Math.atan2(dy, dx);
-                        node.vx += Math.cos(pushAngle) * force * 2.2;
-                        node.vy += Math.sin(pushAngle) * force * 2.2;
+                        node.vx += Math.cos(pushAngle) * force * 2.0;
+                        node.vy += Math.sin(pushAngle) * force * 2.0;
                     }
 
                     const spring = 0.035;
@@ -417,10 +437,10 @@
                     node.x += node.vx;
                     node.y += node.vy;
 
-                    const maxX = space.clientWidth - node.element.offsetWidth - 20;
-                    const maxY = space.clientHeight - node.element.offsetHeight - 20;
-                    node.x = Math.max(20, Math.min(maxX, node.x));
-                    node.y = Math.max(20, Math.min(maxY, node.y));
+                    const maxX = space.clientWidth - node.element.offsetWidth - 15;
+                    const maxY = space.clientHeight - node.element.offsetHeight - 15;
+                    node.x = Math.max(15, Math.min(maxX, node.x));
+                    node.y = Math.max(15, Math.min(maxY, node.y));
 
                     node.element.style.left = `${node.x}px`;
                     node.element.style.top = `${node.y}px`;
