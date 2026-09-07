@@ -14,7 +14,7 @@
     <header>
         <div class="system-status">SYS_TIME: 2050.11.03 // <span>TRANSMITTING TO 2026.11.03</span></div>
         <h1>Chrono-Hex</h1>
-        <button class="cast-btn" onclick="openCastModal()">[+ Transmit Advice]</button>
+        <button id="open-cast-btn" class="cast-btn">[+ Transmit Advice]</button>
     </header>
 
     <!-- Drifting Grid Workspace -->
@@ -32,8 +32,8 @@
             <div class="rune-grid" id="rune-selection-grid"></div>
 
             <div class="modal-actions">
-                <button class="close-modal" onclick="closeModals()">[ Abort ]</button>
-                <button class="cast-btn" onclick="submitAdvice()">Transmit Spell</button>
+                <button id="close-modal-btn" class="close-modal">[ Abort ]</button>
+                <button id="submit-advice-btn" class="cast-btn">Transmit Spell</button>
             </div>
         </div>
     </div>
@@ -63,10 +63,10 @@
                 </div>
 
                 <div class="modal-actions" style="justify-content: space-between; width: 100%; margin-top: 20px;">
-                    <button class="close-modal" onclick="closeModals()">[ Dismiss ]</button>
+                    <button class="close-modal dismiss-btn">[ Dismiss ]</button>
                     <div style="display: flex; gap: 10px;">
-                        <button class="cast-btn danger" onclick="showDispellWarning()">Dispell</button>
-                        <button class="cast-btn" onclick="downloadTalisman()">Download JPEG Talisman</button>
+                        <button class="cast-btn danger" id="show-dispell-btn">Dispell</button>
+                        <button class="cast-btn" id="download-talisman-btn">Download JPEG Talisman</button>
                     </div>
                 </div>
             </div>
@@ -78,8 +78,8 @@
                     are you sure you want to permanently destroy this communication
                 </p>
                 <div class="modal-actions" style="justify-content: flex-end; gap: 15px; width: 100%;">
-                    <button class="close-modal" onclick="hideDispellWarning()">[ Cancel ]</button>
-                    <button class="cast-btn danger" onclick="confirmDispell()">Confirm Dispell</button>
+                    <button class="close-modal" id="hide-dispell-btn">[ Cancel ]</button>
+                    <button class="cast-btn danger" id="confirm-dispell-btn">Confirm Dispell</button>
                 </div>
             </div>
         </div>
@@ -259,12 +259,9 @@
         .talisman-footer { font-size: 0.7rem; color: #888; display: flex; justify-content: space-between; }
     </style>
 
-    <!-- Standard script block exposing variables correctly to window scope -->
     <script>
         const SUPABASE_URL = 'https://lagbighslghkednwrnit.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_v1DJ2NwxcA252wj2R2e3Pg_1vQaDrom';
-        
-        // Initialize Supabase from global window scope library
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         const runeSvgs = {
@@ -306,6 +303,7 @@
 
         function initRuneSelector() {
             const grid = document.getElementById('rune-selection-grid');
+            if (!grid) return;
             grid.innerHTML = '';
             let first = true;
 
@@ -449,24 +447,6 @@
             document.getElementById('grab-modal').style.display = 'flex';
         }
 
-        function showDispellWarning() {
-            document.getElementById('grab-main-view').style.display = 'none';
-            document.getElementById('grab-warn-view').style.display = 'block';
-        }
-
-        function hideDispellWarning() {
-            document.getElementById('grab-warn-view').style.display = 'none';
-            document.getElementById('grab-main-view').style.display = 'block';
-        }
-
-        async function confirmDispell() {
-            if (currentSelectedAdviceId) {
-                await deleteAdviceFromStorage(currentSelectedAdviceId);
-            }
-            closeModals();
-            await initMatrix();
-        }
-
         function closeModals() {
             document.querySelectorAll('.overlay').forEach(el => el.style.display = 'none');
             const input = document.getElementById('advice-input');
@@ -474,34 +454,60 @@
             currentSelectedAdviceId = null;
         }
 
-        async function submitAdvice() {
-            const input = document.getElementById('advice-input');
-            if (!input) return;
-            const text = input.value.trim();
-            if(!text) return;
-            
-            const selectedRuneInput = document.querySelector('input[name="rune-choice"]:checked');
-            const rune = selectedRuneInput ? selectedRuneInput.value : 'balance';
+        // Setup Event Listeners safely once DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            initMatrix();
 
-            await saveAdviceToStorage(text, rune);
-            closeModals();
-            await initMatrix();
-        }
+            document.getElementById('open-cast-btn').addEventListener('click', openCastModal);
+            document.getElementById('close-modal-btn').addEventListener('click', closeModals);
+            document.getElementById('submit-advice-btn').addEventListener('click', async () => {
+                const input = document.getElementById('advice-input');
+                if (!input) return;
+                const text = input.value.trim();
+                if (!text) return;
+                
+                const selectedRuneInput = document.querySelector('input[name="rune-choice"]:checked');
+                const rune = selectedRuneInput ? selectedRuneInput.value : 'balance';
 
-        function downloadTalisman() {
-            const targetCard = document.getElementById('talisman-render');
-            html2canvas(targetCard, {
-                backgroundColor: '#000000',
-                scale: 2 
-            }).then(canvas => {
-                const link = document.createElement('a');
-                link.download = 'cyber-witch-talisman-2050.jpg';
-                link.href = canvas.toDataURL('image/jpeg', 0.9);
-                link.click();
+                await saveAdviceToStorage(text, rune);
+                closeModals();
+                await initMatrix();
             });
-        }
 
-        window.onload = initMatrix;
+            document.querySelectorAll('.dismiss-btn').forEach(btn => btn.addEventListener('click', closeModals));
+            
+            document.getElementById('show-dispell-btn').addEventListener('click', () => {
+                document.getElementById('grab-main-view').style.display = 'none';
+                document.getElementById('grab-warn-view').style.display = 'block';
+            });
+
+            document.getElementById('hide-dispell-btn').addEventListener('click', () => {
+                document.getElementById('grab-warn-view').style.display = 'none';
+                document.getElementById('grab-main-view').style.display = 'block';
+            });
+
+            document.getElementById('confirm-dispell-btn').addEventListener('click', async () => {
+                if (currentSelectedAdviceId) {
+                    await deleteAdviceFromStorage(currentSelectedAdviceId);
+                }
+                closeModals();
+                await initMatrix();
+            });
+
+            document.getElementById('download-talisman-btn').addEventListener('click', () => {
+                const targetCard = document.getElementById('talisman-render');
+                html2canvas(targetCard, {
+                    backgroundColor: '#000000',
+                    scale: 2 
+                }).then(canvas => {
+                    const link = document.createElement('a');
+                    link.download = 'cyber-witch-talisman-2050.jpg';
+                    link.href = canvas.toDataURL('image/jpeg', 0.9);
+                    link.click();
+                });
+            });
+        });
+
         window.onresize = initMatrix;
     </script>
 </body>
