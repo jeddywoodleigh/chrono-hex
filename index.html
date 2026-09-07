@@ -262,7 +262,7 @@
     <script>
         const SUPABASE_URL = 'https://lagbighslghkednwrnit.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_v1DJ2NwxcA252wj2R2e3Pg_1vQaDrom';
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         const runeSvgs = {
             "balance": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 283.46 283.46"><style>.cls-rune{fill:none;stroke:#fff;stroke-linejoin:round;stroke-width:5px;}</style><line class="cls-rune" x1="141.73" y1="28.35" x2="141.73" y2="255.12"/><rect class="cls-rune" x="28.35" y="28.35" width="226.77" height="226.77"/><polyline class="cls-rune" points="141.73 56.69 56.69 141.73 141.73 226.77"/><polygon class="cls-rune" points="141.73 141.73 99.21 99.21 99.21 184.25 141.73 141.73"/><polyline class="cls-rune" points="141.73 56.69 226.77 141.73 141.73 226.77"/><polygon class="cls-rune" points="141.73 141.73 184.25 99.21 184.25 184.25 141.73 141.73"/></svg>`,
@@ -273,7 +273,7 @@
         };
 
         async function getStoredAdvices() {
-            const { data, error } = await supabase.from('advices').select('*');
+            const { data, error } = await db.from('advices').select('*');
             if (error) {
                 console.error('Error fetching advices:', error);
                 return [];
@@ -287,7 +287,7 @@
                 text: text,
                 rune: rune
             };
-            const { error } = await supabase.from('advices').insert([newEntry]);
+            const { error } = await db.from('advices').insert([newEntry]);
             if (error) {
                 console.error('Error saving advice:', error);
             }
@@ -295,7 +295,7 @@
         }
 
         async function deleteAdviceFromStorage(id) {
-            const { error } = await supabase.from('advices').delete().eq('id', id);
+            const { error } = await db.from('advices').delete().eq('id', id);
             if (error) {
                 console.error('Error deleting advice:', error);
             }
@@ -454,7 +454,6 @@
             currentSelectedAdviceId = null;
         }
 
-        // Setup Event Listeners safely once DOM is loaded
         document.addEventListener('DOMContentLoaded', () => {
             initMatrix();
 
