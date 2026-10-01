@@ -63,7 +63,7 @@
         <div class="modal-box" style="text-align: center; max-width: 600px; align-items: center;">
             <div id="grab-main-view">
                 <h2>// HEX CAPTURED</h2>
-                <p class="modal-subtitle">You have snatched a transmission out of the air. Preserve locally or dispell.</p>
+                <p class="modal-subtitle">You have snatched a transmission out of the air. Preserve locally or destroy.</p>
                 
                 <div style="display: inline-block; margin-bottom: 10px; margin-top: 15px; max-width: 100%; overflow-x: auto;">
                     <div id="talisman-render" class="talisman-card">
@@ -83,23 +83,23 @@
                 </div>
 
                 <div class="modal-actions" style="justify-content: space-between; width: 100%; margin-top: 20px; flex-wrap: wrap; gap: 10px;">
-                    <button class="close-modal dismiss-btn">[ Dismiss ]</button>
+                    <button class="close-modal dismiss-btn">[ Return to Transmissions ]</button>
                     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                        <button class="cast-btn danger" id="show-dispell-btn">Dispell</button>
-                        <button class="cast-btn" id="download-talisman-btn">Download JPEG Talisman</button>
+                        <button class="cast-btn danger" id="show-dispell-btn">Destroy</button>
+                        <button class="cast-btn" id="download-talisman-btn">Preserve</button>
                     </div>
                 </div>
             </div>
 
             <!-- Dispell Warning View -->
             <div id="grab-warn-view" style="display: none; width: 100%; text-align: left; padding: 20px 0;">
-                <h2 style="color: var(--alert); margin-bottom: 15px;">// WARNING: DISPELL PROTOCOL</h2>
+                <h2 style="color: var(--alert); margin-bottom: 15px;">// WARNING:</h2>
                 <p style="font-size: 1.05rem; color: var(--text); line-height: 1.6; margin-bottom: 30px;">
                     Are you sure you want to permanently destroy this communication? In 2050, all culture is valuable.
                 </p>
                 <div class="modal-actions" style="justify-content: flex-end; gap: 15px; width: 100%;">
                     <button class="close-modal" id="hide-dispell-btn">[ Cancel ]</button>
-                    <button class="cast-btn danger" id="confirm-dispell-btn">Confirm Dispell</button>
+                    <button class="cast-btn danger" id="confirm-dispell-btn">Confirm Destruction</button>
                 </div>
             </div>
         </div>
